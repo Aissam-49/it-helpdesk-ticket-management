@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Service Desk & Operations</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="top-nav" aria-label="Main navigation">
+        <div class="top-nav-inner">
+            <a class="brand" href="#overview" aria-label="IT ServiceDesk Pro home">
+                <span class="brand-icon" aria-hidden="true">IT</span>
+                <span class="brand-copy">
+                    <strong>IT ServiceDesk Pro</strong>
+                    <span>Enterprise Ops</span>
+                </span>
+            </a>
+            <div class="nav-links">
+                <a class="nav-link active" href="#overview">Overview</a>
+                <a class="nav-link" href="#analytics">Analytics</a>
+                <a class="nav-link" href="#new-ticket">New Ticket</a>
+                <a class="nav-link" href="#support-queue">Support Queue</a>
+            </div>
+            <div class="nav-actions">
+                <span class="live-indicator"><span></span> Live</span>
+                <a class="log-ticket-button" href="#new-ticket">+ Log Ticket</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="app-shell">
+        <header class="page-header">
+            <div>
+                <p class="eyebrow">SERVICE OPERATIONS</p>
+                <h1>IT Service Desk</h1>
+            </div>
+        </header>
+
+        <!-- Summary cards are filled by JavaScript using the /api/summary response. -->
+        <section id="overview" class="summary-grid" aria-label="Ticket summary">
+            <article class="summary-card open">
+                <span class="summary-label">Open</span>
+                <strong id="open-count">0</strong>
+            </article>
+            <article class="summary-card progress">
+                <span class="summary-label">In Progress</span>
+                <strong id="progress-count">0</strong>
+            </article>
+            <article class="summary-card resolved">
+                <span class="summary-label">Resolved</span>
+                <strong id="resolved-count">0</strong>
+            </article>
+            <article class="summary-card high">
+                <span class="summary-label">High Priority</span>
+                <strong id="high-count">0</strong>
+            </article>
+            <article class="summary-card resolution">
+                <span class="summary-label">Resolution Rate</span>
+                <strong><span id="resolution-rate">0</span><small>%</small></strong>
+            </article>
+        </section>
+
+        <section id="analytics" class="panel analytics-panel" aria-labelledby="analytics-title">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">SERVICE OPERATIONS</p>
+                    <h2 id="analytics-title">Operations Analytics</h2>
+                </div>
+                <span class="analytics-caption">Ticket distribution</span>
+            </div>
+            <div class="chart-grid">
+                <article class="chart-card">
+                    <h3>Tickets by Category</h3>
+                    <div class="chart-container doughnut-container">
+                        <canvas id="category-chart" role="img" aria-label="Doughnut chart of tickets by category"></canvas>
+                    </div>
+                </article>
+                <article class="chart-card">
+                    <h3>Tickets by Department</h3>
+                    <div class="chart-container">
+                        <canvas id="department-chart" role="img" aria-label="Bar chart of tickets by department"></canvas>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- This form supports an existing user or a newly created user. -->
+        <section id="new-ticket" class="panel form-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="section-kicker">NEW REQUEST</p>
+                    <h2>Create Ticket</h2>
+                </div>
+            </div>
+
+            <form id="ticket-form" novalidate>
+                <div class="form-grid">
+                    <div class="field field-wide">
+                        <label for="title">Issue title</label>
+                        <input id="title" name="title" type="text" maxlength="120"
+                               placeholder="Example: Office Wi-Fi is disconnected" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="category">Category</label>
+                        <select id="category" name="category" required>
+                            <option value="">Select category</option>
+                            <option value="Network">Network</option>
+                            <option value="Software">Software</option>
+                            <option value="Hardware">Hardware</option>
+                            <option value="Access">Access</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="priority">Priority</label>
+                        <select id="priority" name="priority" required>
+                            <option value="">Select priority</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+
+                    <fieldset class="field field-wide user-choice">
+                        <legend>Requester</legend>
+                        <label class="radio-option">
+                            <input type="radio" name="user_mode" value="existing" checked>
+                            Existing user
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="user_mode" value="new">
+                            Add a new user
+                        </label>
+                    </fieldset>
+
+                    <div id="existing-user-fields" class="field field-wide">
+                        <label for="user-id">User</label>
+                        <select id="user-id" name="user_id"></select>
+                    </div>
+
+                    <div id="new-user-fields" class="new-user-grid field-wide" hidden>
+                        <div class="field">
+                            <label for="full-name">Full name</label>
+                            <input id="full-name" name="full_name" type="text" placeholder="Full name">
+                        </div>
+                        <div class="field">
+                            <label for="department">Department</label>
+                            <input id="department" name="department" type="text" placeholder="Department">
+                        </div>
+                        <div class="field">
+                            <label for="email">Email</label>
+                            <input id="email" name="email" type="email" placeholder="name@example.com">
+                        </div>
+                    </div>
+                </div>
+
+                <p id="form-message" class="form-message" role="alert"></p>
+                <button class="primary-button" type="submit">Create Ticket</button>
+            </form>
+        </section>
+
+        <!-- Filters operate locally on the ticket array returned by the API. -->
+        <section id="support-queue" class="panel table-panel">
+            <div class="panel-heading table-heading">
+                <div>
+                    <p class="section-kicker">SUPPORT QUEUE</p>
+                    <h2>All Tickets</h2>
+                </div>
+                <div class="filters">
+                    <label class="search-field" for="search-filter">
+                        <span class="visually-hidden">Search tickets</span>
+                        <input id="search-filter" type="search" placeholder="Search by ID, issue, requester, or department...">
+                    </label>
+                    <label for="category-filter">Category
+                        <select id="category-filter">
+                            <option value="All">All</option>
+                            <option value="Network">Network</option>
+                            <option value="Software">Software</option>
+                            <option value="Hardware">Hardware</option>
+                            <option value="Access">Access</option>
+                        </select>
+                    </label>
+                    <label for="status-filter">Status
+                        <select id="status-filter">
+                            <option value="All">All</option>
+                            <option value="Open">Open</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                        </select>
+                    </label>
+                    <label for="priority-filter">Priority
+                        <select id="priority-filter">
+                            <option value="All">All</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </label>
+                    <a class="secondary-button export-button" href="/api/tickets/export">Export CSV</a>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Requester</th>
+                            <th>Issue</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticket-table-body"></tbody>
+                </table>
+                <p id="empty-state" class="empty-state" hidden>No tickets match these filters.</p>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
